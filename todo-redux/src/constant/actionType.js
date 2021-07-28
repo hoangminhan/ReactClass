@@ -1,0 +1,10 @@
+export const LIST_TASK = "LIST_TASK";
+export const ADD_TASK = "ADD_TASK";
+export const SEARCH_TASK = "SEARCH_TASK";
+export const SORT_TASK = "SORT_TASK";
+export const SEARCH_TASK_TABLE = "SEARCH_TASK_TABLE";
+export const DELETE_TASK = "DELETE_TASK";
+export const EDIT_TASK = "EDIT_TASK";
+export const RESET_EDIT_TASK = "RESET_EDIT_TASK";
+export const TOGGLE_FORM = "TOGGLE_FORM";
+export const TOGGLE_STATUS = "TOGGLE_STATUS";
