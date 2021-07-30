@@ -1,0 +1,28 @@
+{
+  "products": [
+    {
+      "id": 2,
+      "name": "Oppo",
+      "price": 20200,
+      "status": false
+    },
+    {
+      "name": "Hoàng Minh An",
+      "price": "123",
+      "status": false,
+      "id": 5
+    },
+    {
+      "id": 6,
+      "name": "JavaScript",
+      "price": "1234",
+      "status": true
+    },
+    {
+      "id": 7,
+      "name": "Pham Quang TInh 1231111",
+      "price": "1234",
+      "status": false
+    }
+  ]
+}

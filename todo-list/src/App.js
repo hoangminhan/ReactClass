@@ -3,14 +3,13 @@ import React, { Component } from "react";
 import TaskForm from "./components/TaskForm";
 import Control from "./components/Control";
 import TaskList from "./components/TaskList";
+import { connect } from "react-redux";
+import * as actions from "./actions/index";
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      tasks: [],
-      isDisplayForm: false,
-      taskEditting: null,
       filter: {
         name: "",
         status: -1,
@@ -22,163 +21,25 @@ class App extends Component {
       },
     };
   }
-  // gọi sau khi refresh website và chỉ được gọi duy nhất một lần
-  // componentWillMount
-  componentDidMount() {
-    if (localStorage && localStorage.getItem("listTask")) {
-      const tasks = JSON.parse(localStorage.getItem("listTask"));
-      this.setState({
-        tasks,
-      });
-    }
-  }
-  generateData = () => {
-    const tasks = [
-      {
-        id: this.generateID(),
-        name: "Học lập trình",
-        status: true,
-      },
-      {
-        id: this.generateID(),
-        name: "Học tiếng anh",
-        status: true,
-      },
-      {
-        id: this.generateID(),
-        name: "Đi nhậu",
-        status: false,
-      },
-    ];
-    this.setState({
-      tasks,
-    });
-    localStorage.setItem("listTask", JSON.stringify(tasks));
-  };
-
-  s4() {
-    return Math.floor(1 + Math.random() * 10000);
-  }
-
-  generateID() {
-    return this.s4() + this.s4() + "-" + this.s4();
-  }
 
   // handle click add work
-  onToggleForm = () => {
-    if (this.state.isDisplayForm && this.state.taskEditting !== null) {
-      this.setState({
-        taskEditting: null,
-
-        isDisplayForm: true,
-      });
+  onToggleForm = (isEditting) => {
+    if (isEditting === true && this.props.taskEditting.task) {
+      this.props.openForm();
+      this.props.editTask(false);
     } else {
-      this.setState({
-        taskEditting: null,
-
-        isDisplayForm: !this.state.isDisplayForm,
-      });
+      isEditting = false;
+      this.props.onToggleForm();
+      this.props.editTask(isEditting);
     }
   };
 
-  handleCloseForm = () => {
-    this.setState({
-      isDisplayForm: false,
-    });
-  };
   handleShowForm = () => {
     this.setState({
       isDisplayForm: true,
     });
   };
-  dataAdd = (data) => {
-    console.log(data.id);
-    let { tasks } = this.state;
 
-    if (data.id === "") {
-      data.id = this.generateID();
-      tasks.push(data);
-    } else {
-      tasks.forEach((task, index) => {
-        if (task.id === data.id) {
-          tasks[index] = data;
-        }
-      });
-      this.setState({
-        tasks,
-      });
-    }
-
-    this.setState({
-      tasks,
-      taskEditting: null,
-    });
-    this.handleCloseForm();
-
-    localStorage.setItem("listTask", JSON.stringify(tasks));
-  };
-  // remove task
-  handleDeleteTask = (id) => {
-    const { tasks } = this.state;
-    const listTask = tasks.filter((task) => {
-      return task.id !== id;
-    });
-
-    this.setState({
-      ...this.state,
-      tasks: listTask,
-    });
-    localStorage.setItem("listTask", JSON.stringify(listTask));
-  };
-
-  onUpdateStatus = (value) => {
-    // console.log(value);
-    const { tasks } = this.state;
-    tasks.forEach((task) => {
-      if (task.id === value) {
-        task.status = !task.status;
-      }
-    });
-    // console.log(tasks);
-    this.setState({
-      ...this.state,
-      tasks,
-    });
-    localStorage.setItem("listTask", JSON.stringify(tasks));
-  };
-
-  // update
-  handleUpdate = (id) => {
-    const { tasks } = this.state;
-    const taskEditting = tasks.find((task) => {
-      return task.id === id;
-    });
-    // localStorage.setItem("taskEditting", JSON.stringify(taskEditting));
-    this.setState({
-      ...this.state,
-      taskEditting,
-    });
-
-    this.handleShowForm();
-  };
-  handleFilter = (data) => {
-    this.setState({
-      filter: {
-        name: data.filterName.toLowerCase(),
-        status: data.filterStatus,
-      },
-    });
-  };
-  handleSearch = (keySearch) => {
-    console.log("key", keySearch);
-    const { tasks } = this.state;
-    var newTasks = tasks.filter((task) => {
-      return task.name.toLowerCase().indexOf(keySearch.keyWord) !== -1;
-    });
-    this.setState({
-      tasks: newTasks,
-    });
-  };
   handleSort = (data) => {
     console.log(data);
     this.setState(
@@ -195,54 +56,31 @@ class App extends Component {
   };
 
   render() {
-    let { tasks, isDisplayForm, taskEditting, filter, sort } = this.state;
-    console.log(sort);
+    const isEditting = this.props.taskEditting.isEditting;
+    let { filter, sort } = this.state;
+    let { isDisplayForm } = this.props;
 
-    if (filter) {
-      if (filter.name) {
-        tasks = tasks.filter((task) => {
-          return task.name.toLowerCase().indexOf(filter.name) !== -1;
-        });
-      }
-      tasks = tasks.filter((task) => {
-        if (filter.status === -1) {
-          return task;
-        } else {
-          return task.status === Boolean(filter.status);
-        }
-      });
-    }
-    if (sort.sortBy === "name") {
-      tasks.sort((a, b) => {
-        return a.name === b.name
-          ? 0
-          : a.name > b.name
-          ? sort.sortValue
-          : -sort.sortValue;
-        // if (a.name > b.name) return sort.sortValue;
-        // else if (a.name < b.name) return -sort.sortValue;
-        // else return 0;
-      });
-    } else {
-      tasks.sort((a, b) => {
-        return a.status === b.status
-          ? 0
-          : a.status > b.status
-          ? -sort.sortValue
-          : sort.sortValue;
-      });
-    }
+    // if (sort.sortBy === "name") {
+    //   tasks.sort((a, b) => {
+    //     return a.name === b.name
+    //       ? 0
+    //       : a.name > b.name
+    //       ? sort.sortValue
+    //       : -sort.sortValue;
+    //     // if (a.name > b.name) return sort.sortValue;
+    //     // else if (a.name < b.name) return -sort.sortValue;
+    //     // else return 0;
+    //   });
+    // } else {
+    //   tasks.sort((a, b) => {
+    //     return a.status === b.status
+    //       ? 0
+    //       : a.status > b.status
+    //       ? -sort.sortValue
+    //       : sort.sortValue;
+    //   });
+    // }
 
-    const elementTaskForm = isDisplayForm ? (
-      <TaskForm
-        // isDisplayForm={isDisplayForm}
-        handleCloseForm={this.handleCloseForm}
-        dataAdd={this.dataAdd}
-        taskEditting={taskEditting}
-      />
-    ) : (
-      ""
-    );
     return (
       <div>
         <div className="container">
@@ -258,8 +96,7 @@ class App extends Component {
                   : "col-xs-0 col-sm-0 col-md-0 col-lg-0"
               }
             >
-              {/* Form */}
-              {elementTaskForm}
+              <TaskForm />
             </div>
 
             <div
@@ -272,7 +109,7 @@ class App extends Component {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={this.onToggleForm}
+                onClick={() => this.onToggleForm(isEditting)}
               >
                 <span className="fas fa-plus"></span>
                 Thêm công việc
@@ -292,9 +129,6 @@ class App extends Component {
                 handleSort={this.handleSort}
               />
               <TaskList
-                tasks={tasks}
-                handleDelete={this.handleDeleteTask}
-                onUpdateStatus={this.onUpdateStatus}
                 handleUpdate={this.handleUpdate}
                 handleFilter={this.handleFilter}
               />
@@ -305,5 +139,23 @@ class App extends Component {
     );
   }
 }
-
-export default App;
+const mapStateToProps = (state) => {
+  return {
+    isDisplayForm: state.isDisplayForm,
+    taskEditting: state.taskEdtting,
+  };
+};
+const mapDispatchToProps = (dispatch, action) => {
+  return {
+    onToggleForm: () => {
+      dispatch(actions.onToggleForm());
+    },
+    openForm: () => {
+      dispatch(actions.openForm());
+    },
+    editTask: (task) => {
+      dispatch(actions.editTask(task));
+    },
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(App);

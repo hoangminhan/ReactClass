@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import TaskItem from "./TaskItem";
+import * as actions from "./../actions/index";
+import { connect } from "react-redux";
 
 class TaskList extends Component {
   constructor(props) {
@@ -9,9 +11,7 @@ class TaskList extends Component {
       filterStatus: -1,
     };
   }
-  handleDeleteTask = (id) => {
-    this.props.handleDelete(id);
-  };
+
   handleChange = async (event) => {
     const target = event.target;
     const name = target.name;
@@ -21,16 +21,12 @@ class TaskList extends Component {
       [name]: value,
     });
 
-    await this.props.handleFilter(this.state);
+    await this.props.filterTask(this.state);
   };
   render() {
     const { tasks } = this.props;
     const { filterName, filterStatus } = this.state;
 
-    // const elementsTask = tasks.map((task, index) => {
-    //   return <TaskItem key={index} index={index} task={task} />;
-    // });
-    // console.log(elementsTask);
     return (
       <div className="row mt-15">
         <div className="col-xs-12 col-sm-12 col-md-12 col-lg-12">
@@ -69,13 +65,7 @@ class TaskList extends Component {
                 </td>
                 <td></td>
               </tr>
-              {/* {elementsTask} */}
-              <TaskItem
-                tasks={tasks}
-                handleDeleteTask={this.handleDeleteTask}
-                onUpdateStatus={this.props.onUpdateStatus}
-                handleUpdate={this.props.handleUpdate}
-              />
+              <TaskItem />
             </tbody>
           </table>
         </div>
@@ -83,5 +73,12 @@ class TaskList extends Component {
     );
   }
 }
+const mapDispatchToProps = (dispatch) => {
+  return {
+    filterTask: (dataFilter) => {
+      dispatch(actions.filterTask(dataFilter));
+    },
+  };
+};
 
-export default TaskList;
+export default connect(null, mapDispatchToProps)(TaskList);

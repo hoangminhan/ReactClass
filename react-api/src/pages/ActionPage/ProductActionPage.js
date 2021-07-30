@@ -1,5 +1,12 @@
 import React, { Component } from "react";
 import callApi from "../../utils/apiCall";
+import { connect } from "react-redux";
+import {
+  asynAddProduct,
+  asynUpdateProduct,
+  asynEditProduct,
+} from "./../../actions/index";
+import products from "../../reducer.js/productReducer";
 
 class ProductActionPage extends Component {
   constructor(props) {
@@ -13,19 +20,40 @@ class ProductActionPage extends Component {
   }
   componentDidMount() {
     const { match } = this.props;
+
     if (match) {
       const id = match.params.id;
-      callApi(`products/${id}`, "GET", null).then((res) => {
-        const { data } = res;
-        this.setState({
-          id: data.id,
-          txtName: data.name,
-          txtPrice: data.price,
-          status: data.status,
-        });
-      });
+      this.props.onEditProduct(id);
+
+      // callApi(`products/${id}`, "GET", null).then((res) => {
+      //   const { data } = res;
+      //   this.setState({
+      //     id: data.id,
+      //     txtName: data.name,
+      //     txtPrice: data.price,
+      //     status: data.status,
+      //   });
+      // });
     }
   }
+  componentWillReceiveProps = (netProps) => {
+    // const { itemEdit } = this.props;
+    // console.log(this.props.itemEdit);
+    if (netProps && netProps.itemEdit) {
+      this.setState(
+        {
+          id: netProps.itemEdit.id,
+          txtName: netProps.itemEdit.name,
+          txtPrice: netProps.itemEdit.price,
+          status: netProps.itemEdit.status,
+        },
+        () => {
+          console.log(this.state);
+        }
+      );
+    }
+    console.log("recieve props");
+  };
   handleChange = (event) => {
     const target = event.target;
     const name = target.name;
@@ -38,24 +66,35 @@ class ProductActionPage extends Component {
   handleSubmit = (event) => {
     const { history } = this.props;
     const { id, txtName, txtPrice, status } = this.state;
+    const product = { name: txtName, price: txtPrice, status: status };
+    const productUpdate = {
+      id: id,
+      name: txtName,
+      price: txtPrice,
+      status: status,
+    };
+
     event.preventDefault();
     if (id) {
-      callApi(`products/${id}`, "PUT", {
-        name: txtName,
-        price: txtPrice,
-        status: status,
-      }).then((res) => {
-        history.goBack();
-      });
+      // callApi(`products/${id}`, "PUT", {
+      //   name: txtName,
+      //   price: txtPrice,
+      //   status: status,
+      // }).then((res) => {
+      //   history.goBack();
+      // });
+      this.props.onUpdateProduct(productUpdate);
     } else {
-      callApi("products", "POST", {
-        name: this.state.txtName,
-        price: this.state.txtPrice,
-        status: this.state.status,
-      }).then((res) => {
-        history.push("/products");
-      });
+      // callApi("products", "POST", {
+      //   name: this.state.txtName,
+      //   price: this.state.txtPrice,
+      //   status: this.state.status,
+      // }).then((res) => {
+      //   history.push("/products");
+      // });
+      this.props.onAddProduct(product);
     }
+    history.push("/products");
   };
   render() {
     const { txtName, txtPrice, status } = this.state;
@@ -123,5 +162,23 @@ class ProductActionPage extends Component {
     );
   }
 }
+const mapStateToProps = (state) => {
+  return {
+    itemEdit: state.editProduct,
+  };
+};
+const mapDipstachToProps = (dispatch) => {
+  return {
+    onAddProduct: (product) => {
+      dispatch(asynAddProduct(product));
+    },
+    onUpdateProduct: (product) => {
+      dispatch(asynUpdateProduct(product));
+    },
+    onEditProduct: (id) => {
+      dispatch(asynEditProduct(id));
+    },
+  };
+};
 
-export default ProductActionPage;
+export default connect(mapStateToProps, mapDipstachToProps)(ProductActionPage);

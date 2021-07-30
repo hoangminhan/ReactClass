@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
+import * as actions from "../actions/index";
 
 class TaskForm extends Component {
   constructor(props) {
@@ -9,29 +11,30 @@ class TaskForm extends Component {
       status: false,
     };
   }
-  componentWillMount() {
-    // const task = JSON.parse(localStorage.getItem("taskEditting"));
-    // console.log(task);
-    if (this.props.taskEditting) {
-      this.setState({
-        id: this.props.taskEditting.id,
-        name: this.props.taskEditting.name,
-        status: this.props.taskEditting.status,
-      });
-    }
-  }
+  // componentWillMount() {
+  //   // const task = JSON.parse(localStorage.getItem("taskEditting"));
+  //   // console.log(task);
+  //   if (this.props.taskEditting) {
+  //     this.setState({
+  //       id: this.props.taskEditting.id,
+  //       name: this.props.taskEditting.name,
+  //       status: this.props.taskEditting.status,
+  //     });
+  //   }
+  // }
   componentWillReceiveProps(nextProps) {
-    if (nextProps && nextProps.taskEditting) {
-      this.setState({
-        id: nextProps.taskEditting.id,
-        name: nextProps.taskEditting.name,
-        status: nextProps.taskEditting.status,
-      });
-    } else if (!nextProps.taskEditting) {
+    console.log(nextProps);
+    if (nextProps.taskEditting.isEditting === false) {
       this.setState({
         id: "",
         name: "",
         status: false,
+      });
+    } else if (nextProps && nextProps.taskEditting) {
+      this.setState({
+        id: nextProps.taskEditting.task.id,
+        name: nextProps.taskEditting.task.name,
+        status: nextProps.taskEditting.task.status,
       });
     }
   }
@@ -42,9 +45,14 @@ class TaskForm extends Component {
     if (name === "status") {
       value = target.value === "true" ? true : false;
     }
-    this.setState({
-      [name]: value,
-    });
+    this.setState(
+      {
+        [name]: value,
+      },
+      () => {
+        console.log(this.state);
+      }
+    );
   };
   handeResetForm = () => {
     this.setState({
@@ -53,25 +61,26 @@ class TaskForm extends Component {
     });
   };
   handleSubmit = (event) => {
+    debugger;
     event.preventDefault();
-    this.props.dataAdd(this.state);
-
+    this.props.onAdd(this.state);
     this.handeResetForm();
+    this.props.closeForm();
   };
-  onCloseForm = () => {
-    this.props.handleCloseForm();
-  };
+
   render() {
-    const { id } = this.state;
-    return (
+    const { id, name, status } = this.state;
+    return this.props.isDisplayForm ? (
       <div className="panel panel-primary">
         <div className="panel-heading">
           <h3 className="panel-title">
-            {id !== "" ? "Cập nhập công việc" : "Thêm công việc"}
+            {!this.props.taskEditting.isEditting
+              ? "Thêm công việc"
+              : "Cập nhập công việc"}
           </h3>
           <span
             className="fas fa-times icon-time"
-            onClick={this.onCloseForm}
+            onClick={() => this.props.closeForm()}
           ></span>
         </div>
         <div className="panel-body">
@@ -82,7 +91,7 @@ class TaskForm extends Component {
                 type="text"
                 className="form-control"
                 name="name"
-                value={this.state.name}
+                value={name}
                 onChange={this.handleChange}
               />
             </div>
@@ -94,8 +103,8 @@ class TaskForm extends Component {
               id="input"
               className="form-control"
               required="required"
-              value={this.state.status}
-              // defaultValue={true}
+              value={status}
+              defaultValue={false}
               onChange={this.handleChange}
             >
               <option value={true}>Kích hoạt</option>
@@ -116,8 +125,26 @@ class TaskForm extends Component {
           </form>
         </div>
       </div>
+    ) : (
+      ""
     );
   }
 }
+const mapStateToProps = (state) => {
+  return {
+    isDisplayForm: state.isDisplayForm,
+    taskEditting: state.taskEdtting,
+  };
+};
+const mapDispatchToProps = (dispatch, props) => {
+  return {
+    onAdd: (task) => {
+      dispatch(actions.addTask(task));
+    },
+    closeForm: () => {
+      dispatch(actions.closeForm());
+    },
+  };
+};
 
-export default TaskForm;
+export default connect(mapStateToProps, mapDispatchToProps)(TaskForm);
